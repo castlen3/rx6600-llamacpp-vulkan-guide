@@ -37,8 +37,8 @@ RX 6600 比 RX 580 快約 **14%**，而且設定更簡單。
 | 項目 | 規格 |
 |:-----|:-----|
 | **CPU** | Intel Xeon E5-2666 v3 @ 2.90GHz（10C/20T） |
-| **主機板** | X99 平台（DDR3） |
-| **RAM** | 64 GB DDR3 1600 MHz |
+| **主機板** | 華南金牌 X99（DDR3 四通道） |
+| **RAM** | 64 GB DDR3 1600 MHz（四通道） |
 | **GPU** | AMD Radeon RX 6600 8 GB（MSI MECH 2X） |
 | **GPU 驅動** | AMD Adrenalin 32.0.21043.12001 |
 | **Vulkan API** | 支援 fp16、int dot product（RDNA2 優勢） |
@@ -47,10 +47,10 @@ RX 6600 比 RX 580 快約 **14%**，而且設定更簡單。
 
 ### 關於 X99 + E5-2666 v3
 
-這是淘寶上很常見的「洋垃圾」組合——伺服器級 CPU + 便宜的 X99 主機板。優點是核心多、記憶體大、價格低；缺點是 DDR3 頻寬較低、單核性能一般。
+這是中國市場上很常見的「洋垃圾」組合——伺服器級 CPU + 華南金牌 X99 主機板。華南金牌是國產 X99 主機板品牌，支援 DDR3 四通道，穩定性不錯，價格便宜。優點是核心多、記憶體大、價格低；缺點是 DDR3 頻寬較低、單核性能一般。
 
 對 LLM 推理來說：
-- **DDR3 1600 的頻寬約 25.6 GB/s**（雙通道），MoE 模型的 expert 層放在 CPU 記憶體時會受影響
+- **DDR3 1600 四通道頻寬約 51.2 GB/s**，MoE 模型的 expert 層放在 CPU 記憶體時受益於四通道
 - **10 核 20 執行緒** 經綽有餘，llama.cpp 的最佳 threads 數通常在 4~8
 - **64 GB RAM** 足夠載入整個 20GB 模型 + KV cache，不會 swap
 
@@ -227,7 +227,7 @@ http://localhost:8080
 
 1. 8GB VRAM 限制：無法把全部 256 個 expert 放在 GPU，需靠 `--n-cpu-moe` 分流
 2. tg256 效能異常：llama.cpp Vulkan 後端的已知怪癖
-3. DDR3 頻寬瓶頸：X99 + E5-2666 v3 的 DDR3 頻寬會影響 CPU expert 的速度
+3. DDR3 頻寬瓶頸：華南金牌 X99 的 DDR3 四通道頻寬約 51.2 GB/s，比雙通道好但仍低於 DDR4
 4. RDNA2 無 matrix cores：不像 RDNA3 / CDNA 有專屬矩陣運算單元
 
 ---

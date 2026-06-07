@@ -37,8 +37,8 @@ The RX 6600 is ~**14% faster** than the RX 580 with simpler setup.
 | Component | Spec |
 |:----------|:-----|
 | **CPU** | Intel Xeon E5-2666 v3 @ 2.90GHz (10C/20T) |
-| **Motherboard** | X99 platform (DDR3) |
-| **RAM** | 64 GB DDR3 1600 MHz |
+| **Motherboard** | Huananzhi X99 (DDR3 quad-channel) |
+| **RAM** | 64 GB DDR3 1600 MHz (quad-channel) |
 | **GPU** | AMD Radeon RX 6600 8 GB (MSI MECH 2X) |
 | **GPU Driver** | AMD Adrenalin 32.0.21043.12001 |
 | **Vulkan API** | fp16 + int dot product supported (RDNA2 advantage) |
@@ -47,10 +47,10 @@ The RX 6600 is ~**14% faster** than the RX 580 with simpler setup.
 
 ### About the X99 + E5-2666 v3 Platform
 
-This is a popular budget combo — server-grade CPUs paired with cheap X99 motherboards, commonly found on Chinese marketplaces. Pros: many cores, large memory capacity, low price. Cons: DDR3 bandwidth, lower single-thread performance.
+This is a popular budget combo in China — server-grade CPUs paired with Huananzhi (華南金牌) X99 motherboards. Huananzhi is a well-known domestic brand for X99 boards, supporting DDR3 quad-channel with decent stability at low prices. Pros: many cores, large memory capacity, low price. Cons: DDR3 bandwidth (though quad-channel helps), lower single-thread performance.
 
 For LLM inference:
-- **DDR3 1600 bandwidth is ~25.6 GB/s** (dual-channel) — affects expert layers on CPU
+- **DDR3 1600 quad-channel bandwidth is ~51.2 GB/s** — expert layers on CPU benefit from quad-channel
 - **10 cores / 20 threads** is more than enough; llama.cpp optimal threads is typically 4–8
 - **64 GB RAM** comfortably fits the 20GB model + KV cache without swapping
 
@@ -227,7 +227,7 @@ http://localhost:8080
 
 1. 8GB VRAM limit: Cannot fit all 256 experts on GPU; requires `--n-cpu-moe` to split
 2. tg256 performance anomaly: Known quirk in llama.cpp Vulkan backend
-3. DDR3 bandwidth bottleneck: X99 + E5-2666 v3 DDR3 bandwidth limits CPU expert speed
+3. DDR3 bandwidth bottleneck: Huananzhi X99 DDR3 quad-channel bandwidth is ~51.2 GB/s, better than dual-channel but still below DDR4
 4. No matrix cores on RDNA2: Unlike RDNA3 / CDNA, no dedicated matrix compute units
 
 ---
