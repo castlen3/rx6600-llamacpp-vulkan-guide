@@ -2,7 +2,7 @@
 
 [English Version](README_EN.md)
 
-> **TL;DR**: 8GB VRAM 的 RX 6600（RDNA2）透過 Vulkan 後端跑 `Qwen3.6-35B-A3B`，最佳設定可達 **18.6 t/s**。跟 Polaris 架構的 RX 580 不同，RDNA2 **不需要** `GGML_VK_ALLOW_GRAPHICS_QUEUE=1`，設了反而慢 20%。
+> **TL;DR**: 8GB VRAM 的 RX 6600（RDNA2）透過 Vulkan 後端跑 `Qwen3.6-35B-A3B`，最佳設定可達 **18.6 t/s**。跟 Polaris 架構的 RX 580 不同，RDNA2 **不需要** `GGML_VK_ALLOW_GRAPHICS_QUEUE=1`，設了反而慢 20%。另外，我也新增了 `Gemma 4 12B UD Q4_K_XL` 在 **64K context** 下的 long-prefill 調校筆記：最終穩定甜蜜點是 `-ngl 45`。
 
 ---
 
@@ -19,6 +19,34 @@
 ---
 
 ## 效能總覽
+
+### 新增案例：Gemma 4 12B 64K 長 context
+
+- 模型：`gemma-4-12b-it-UD-Q4_K_XL.gguf`
+- 目標：在 RX 6600 8GB 上把 64K context 壓到可日常使用
+- 最終結論：`-ngl 45` 穩、`-ngl 46` 崩
+- 關鍵不是「能啟動」，而是 long-prefill 後段會不會掉速 / swap / GPU 鋸齒化
+
+詳細筆記請看：
+- [GEMMA4_64K.md](GEMMA4_64K.md)
+- [GEMMA4_64K_EN.md](GEMMA4_64K_EN.md)
+
+最終穩定參數：
+
+```bat
+llama-server.exe ^
+  -m gemma-4-12b-it-UD-Q4_K_XL.gguf ^
+  -ngl 45 --device Vulkan0 ^
+  -t 8 -tb 6 ^
+  -c 65536 ^
+  -b 512 -ub 256 ^
+  -fa on ^
+  --cache-type-k q4_0 --cache-type-v q4_0 ^
+  -fit off --mmap ^
+  -np 1 --host 0.0.0.0 --port 8080
+```
+
+---
 
 ### RX 6600 vs 其他卡（Qwen3.6-35B-A3B Q4_K_M）
 

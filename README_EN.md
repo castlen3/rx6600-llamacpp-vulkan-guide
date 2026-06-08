@@ -2,7 +2,7 @@
 
 [中文版](README.md)
 
-> **TL;DR**: An 8GB RX 6600 (RDNA2) running `Qwen3.6-35B-A3B` via Vulkan backend achieves **18.6 t/s** with the right settings. Unlike Polaris (RX 580), RDNA2 does **NOT** need `GGML_VK_ALLOW_GRAPHICS_QUEUE=1` — setting it actually hurts performance by 20%.
+> **TL;DR**: An 8GB RX 6600 (RDNA2) running `Qwen3.6-35B-A3B` via Vulkan backend achieves **18.6 t/s** with the right settings. Unlike Polaris (RX 580), RDNA2 does **NOT** need `GGML_VK_ALLOW_GRAPHICS_QUEUE=1` — setting it actually hurts performance by 20%. I also added a second case study for `Gemma 4 12B UD Q4_K_XL` at **64K context**: the final stable long-prefill sweet spot was `-ngl 45`.
 
 ---
 
@@ -19,6 +19,34 @@ This guide is for:
 ---
 
 ## Performance Summary
+
+### New Case Study: Gemma 4 12B at 64K Context
+
+- Model: `gemma-4-12b-it-UD-Q4_K_XL.gguf`
+- Goal: make 64K context practically usable on an RX 6600 8GB
+- Final conclusion: `-ngl 45` is stable, `-ngl 46` collapses
+- The real issue is not startup success but whether late long-prefill collapses into swap / paging / sawtooth GPU usage
+
+Detailed notes:
+- [GEMMA4_64K.md](GEMMA4_64K.md)
+- [GEMMA4_64K_EN.md](GEMMA4_64K_EN.md)
+
+Final stable command:
+
+```bat
+llama-server.exe ^
+  -m gemma-4-12b-it-UD-Q4_K_XL.gguf ^
+  -ngl 45 --device Vulkan0 ^
+  -t 8 -tb 6 ^
+  -c 65536 ^
+  -b 512 -ub 256 ^
+  -fa on ^
+  --cache-type-k q4_0 --cache-type-v q4_0 ^
+  -fit off --mmap ^
+  -np 1 --host 0.0.0.0 --port 8080
+```
+
+---
 
 ### RX 6600 vs Other GPUs (Qwen3.6-35B-A3B Q4_K_M)
 
