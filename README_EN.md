@@ -30,6 +30,8 @@ This guide is for:
 Detailed notes:
 - [GEMMA4_64K.md](GEMMA4_64K.md)
 - [GEMMA4_64K_EN.md](GEMMA4_64K_EN.md)
+- [GEMMA4_64K_LOG_EN.md](GEMMA4_64K_LOG_EN.md) (decision log)
+- [start_gemma4_12b_vulkan_rx6600_64k_FINAL.bat](start_gemma4_12b_vulkan_rx6600_64k_FINAL.bat) (downloadable launcher)
 
 Final stable command:
 

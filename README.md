@@ -30,6 +30,8 @@
 詳細筆記請看：
 - [GEMMA4_64K.md](GEMMA4_64K.md)
 - [GEMMA4_64K_EN.md](GEMMA4_64K_EN.md)
+- [GEMMA4_64K_LOG.md](GEMMA4_64K_LOG.md)（測試決策 log）
+- [start_gemma4_12b_vulkan_rx6600_64k_FINAL.bat](start_gemma4_12b_vulkan_rx6600_64k_FINAL.bat)（可直接下載執行）
 
 最終穩定參數：
 
