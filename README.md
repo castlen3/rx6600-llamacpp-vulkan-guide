@@ -229,7 +229,6 @@ llama-server.exe \
 | int dot product | ❌ | ✅ |
 | Matrix cores | ❌ | ❌ |
 | Vulkan compute queue | 有 bug（需 workaround） | 正常 |
-| 最佳 -t | 4 | 8 |
 | 需要 GGML_VK_ALLOW_GRAPHICS_QUEUE | ✅ 必須 | ❌ 不要設 |
 | Qwen3.6-35B decode | 16.3 t/s | 18.6 t/s |
 

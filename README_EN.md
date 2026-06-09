@@ -229,7 +229,6 @@ Minimal impact for daily use (chat replies rarely hit exactly 256 tokens), but i
 | Int Dot Product | ❌ | ✅ |
 | Matrix Cores | ❌ | ❌ |
 | Vulkan Compute Queue | Buggy (needs workaround) | Works correctly |
-| Optimal `-t` | 4 | 8 |
 | Needs GGML_VK_ALLOW_GRAPHICS_QUEUE | ✅ Required | ❌ Don't set |
 | Qwen3.6-35B decode | 16.3 t/s | 18.6 t/s |
 
