@@ -2,7 +2,7 @@
 
 [中文版](README.md)
 
-> **TL;DR**: An 8GB RX 6600 (RDNA2) running `Qwen3.6-35B-A3B` via Vulkan backend achieves **18.6 t/s** with the right settings. Unlike Polaris (RX 580), RDNA2 does **NOT** need `GGML_VK_ALLOW_GRAPHICS_QUEUE=1` — setting it actually hurts performance by 20%. I also added a second case study for `Gemma 4 12B UD Q4_K_XL` at **64K context**: the final stable long-prefill sweet spot was `-ngl 45`.
+> **TL;DR**: An 8GB RX 6600 (RDNA2) running `Qwen3.6-35B-A3B` via Vulkan backend achieves **18.6 t/s** in a decode-oriented setup. Unlike Polaris (RX 580), RDNA2 does **NOT** need `GGML_VK_ALLOW_GRAPHICS_QUEUE=1` — setting it actually hurts performance by 20%. I also added a second case study for `Gemma 4 12B UD Q4_K_XL` at **64K context**; and in a real server test on 2026-06-09, if what you care about is **8K prefill responsiveness**, a launcher using `-ngl 40`, `--cache-type-v q4_0`, `-b 4096`, and `-ub 1024` improved average prefill from **181 tok/s** to **223 tok/s**.
 
 ---
 
@@ -60,6 +60,34 @@ llama-server.exe ^
 
 The RX 6600 is ~**14% faster** than the RX 580 with simpler setup.
 
+### 2026-06-09 Update: real-server 8K prefill tuning
+
+The `18.6 t/s` result above is a decode-oriented tuning result. But if your real complaint is “long prompts feel painfully slow”, you need to look at **real server prefill**, not just short synthetic benches.
+
+This update used `llama-server.exe` with a real prompt of about **8010 tokens**, then measured a 1-token completion. Results:
+
+| Setup | Key differences | 8K prefill |
+|:------|:----------------|:----------:|
+| Original | `-ngl 40`, `q8_0/q4_0`, `-b 2048`, `-ub 512` | **181.22 tok/s** |
+| Tuned | `-ngl 40`, `q8_0/q4_0`, `-b 4096`, `-ub 1024` | **222.96 tok/s** |
+| Tuned + `--threads-batch 12` | Same, plus batch threads | **222.70 tok/s** |
+
+Key takeaways:
+
+- The real win came from increasing `-b` / `-ub`: `2048/512 -> 4096/1024`
+- `--threads-batch 12` added essentially nothing and is not worth keeping
+- The best real-server 8K prefill launcher in this run was **not** the old `-ngl 99` preset
+- If your goal is “make long chat prompts feel less sluggish”, this prefill-oriented preset is more useful than the older decode-first preset
+
+Measured average times:
+
+- Original: `44200.95 ms / 8010 tokens` -> `181.22 tok/s`
+- Tuned: `35926.19 ms / 8010 tokens` -> `222.96 tok/s`
+
+Download the ready-to-run launcher:
+
+- [start_qwen_vulkan_rx6600_prefill_8k.bat](start_qwen_vulkan_rx6600_prefill_8k.bat)
+
 ---
 
 ## Test Environment
@@ -111,7 +139,7 @@ Benchmark data:
 
 ---
 
-## Recommended Settings
+## Decode-oriented recommended settings
 
 ```
 llama-server.exe \
@@ -238,10 +266,11 @@ llama-server.exe --list-devices
 ```bash
 llama-server.exe ^
   -m Qwen3.6-35B-A3B-Q4_K_M.gguf ^
-  -ngl 99 --device Vulkan0 -t 8 ^
+  -ngl 40 --device Vulkan0 -t 8 ^
   -c 32768 -fa on ^
-  --cache-type-k q8_0 --cache-type-v q8_0 ^
+  --cache-type-k q8_0 --cache-type-v q4_0 ^
   -fit off --no-mmap ^
+  -b 4096 -ub 1024 ^
   --n-cpu-moe 30 --port 8080
 ```
 

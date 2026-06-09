@@ -2,7 +2,7 @@
 
 [English Version](README_EN.md)
 
-> **TL;DR**: 8GB VRAM 的 RX 6600（RDNA2）透過 Vulkan 後端跑 `Qwen3.6-35B-A3B`，最佳設定可達 **18.6 t/s**。跟 Polaris 架構的 RX 580 不同，RDNA2 **不需要** `GGML_VK_ALLOW_GRAPHICS_QUEUE=1`，設了反而慢 20%。另外，我也新增了 `Gemma 4 12B UD Q4_K_XL` 在 **64K context** 下的 long-prefill 調校筆記：最終穩定甜蜜點是 `-ngl 45`。
+> **TL;DR**: 8GB VRAM 的 RX 6600（RDNA2）透過 Vulkan 後端跑 `Qwen3.6-35B-A3B`，decode 導向最佳設定可達 **18.6 t/s**。跟 Polaris 架構的 RX 580 不同，RDNA2 **不需要** `GGML_VK_ALLOW_GRAPHICS_QUEUE=1`，設了反而慢 20%。另外，我也新增了 `Gemma 4 12B UD Q4_K_XL` 在 **64K context** 下的 long-prefill 調校筆記；而在 2026-06-09 的實際 server 測試中，如果你在意 **8K prefill 體感**，使用 `-ngl 40`、`--cache-type-v q4_0`、`-b 4096`、`-ub 1024` 的 launcher，能把平均 prefill 從 **181 tok/s** 提升到 **223 tok/s**。
 
 ---
 
@@ -60,6 +60,34 @@ llama-server.exe ^
 
 RX 6600 比 RX 580 快約 **14%**，而且設定更簡單。
 
+### 2026-06-09 更新：實際 server 的 8K prefill 調整
+
+前面的 `18.6 t/s` 是 decode 導向調校；但如果你的體感問題是「長 prompt 灌進去很慢」，要看的是 **real server prefill**，不是只看短 bench。
+
+這次用 `llama-server.exe` 實際送入約 **8010 tokens** 的 prompt，測 1-token completion，得到以下結果：
+
+| 設定 | 核心差異 | 8K prefill |
+|:-----|:---------|:-----------:|
+| 原始版 | `-ngl 40`, `q8_0/q4_0`, `-b 2048`, `-ub 512` | **181.22 tok/s** |
+| 調整版 | `-ngl 40`, `q8_0/q4_0`, `-b 4096`, `-ub 1024` | **222.96 tok/s** |
+| 調整版 + `--threads-batch 12` | 同上，額外加 batch threads | **222.70 tok/s** |
+
+重點結論：
+
+- 真正有幫助的是把 `-b` / `-ub` 拉大：`2048/512 -> 4096/1024`
+- `--threads-batch 12` 幾乎沒有額外收益，不值得保留
+- 這次 real-server 8K prefill 最佳 launcher 並不是 `-ngl 99`
+- 若你的需求是「聊天時長 prompt 不要卡太久」，這組 prefill 導向設定比舊版更實用
+
+實測的平均時間：
+
+- 原始版：`44200.95 ms / 8010 tokens` -> `181.22 tok/s`
+- 調整版：`35926.19 ms / 8010 tokens` -> `222.96 tok/s`
+
+可直接下載的啟動檔：
+
+- [start_qwen_vulkan_rx6600_prefill_8k.bat](start_qwen_vulkan_rx6600_prefill_8k.bat)
+
 ---
 
 ## 測試環境
@@ -111,7 +139,7 @@ RDNA2 架構的 Vulkan queue family 正常運作，有專屬的 compute queue，
 
 ---
 
-## 最佳參數
+## Decode 導向最佳參數
 
 ```
 llama-server.exe \
@@ -238,10 +266,11 @@ llama-server.exe --list-devices
 ```bash
 llama-server.exe ^
   -m Qwen3.6-35B-A3B-Q4_K_M.gguf ^
-  -ngl 99 --device Vulkan0 -t 8 ^
+  -ngl 40 --device Vulkan0 -t 8 ^
   -c 32768 -fa on ^
-  --cache-type-k q8_0 --cache-type-v q8_0 ^
+  --cache-type-k q8_0 --cache-type-v q4_0 ^
   -fit off --no-mmap ^
+  -b 4096 -ub 1024 ^
   --n-cpu-moe 30 --port 8080
 ```
 
